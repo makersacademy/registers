@@ -31,25 +31,25 @@ cohorts = [
               Date.new(2018,10,29),
               Date.new(2019,02,01)
   ),
-  Cohort.new("CGI Remote September 2018",
-              Date.new(2018,10,01),
-              Date.new(2019,01,18)
-  ),
-  Cohort.new("Cognizant January 2019",
-              Date.new(2019,10,01), Date.today
-  ),
-  Cohort.new("Mixed September 2018",
-    Date.new(2018,10,01),
-    Date.new(2018,12,21)
-  ),
-  Cohort.new("November 2018",
-    Date.new(2019,01,07),
-    Date.today
-  ),
-  Cohort.new("RELX August 2018",
-    Date.new(2018,9,3),
-    Date.new(2018,11,8)
-  ),
+  # Cohort.new("CGI Remote September 2018",
+  #             Date.new(2018,10,01),
+  #             Date.new(2019,01,18)
+  # ),
+  # Cohort.new("Cognizant January 2019",
+  #             Date.new(2019,10,01), Date.today
+  # ),
+  # Cohort.new("Mixed September 2018",
+  #   Date.new(2018,10,01),
+  #   Date.new(2018,12,21)
+  # ),
+  # Cohort.new("November 2018",
+  #   Date.new(2019,01,07),
+  #   Date.today
+  # ),
+  # Cohort.new("RELX August 2018",
+  #   Date.new(2018,9,3),
+  #   Date.new(2018,11,8)
+  # ),
 ]
 
 apiKey = ENV['AIRTABLE_API_KEY']
@@ -66,12 +66,14 @@ registersByCohort = @registersRecords.group_by { |r|
 
 cohorts.each do |cohort|
 
-  @xmas = (Date.new(2018,12,24)...Date.new(2019,01,04))
+  @xmas = (Date.new(2018,12,24)..Date.new(2019,01,04))
 
   def working_days_between(startDate, endDate)
-    (startDate...endDate).select do |d|
+    (startDate..endDate).select do |d|
+      #weekday
       (1..5).include?(d.wday)
     end.select do |d|
+      #xmas period
       !@xmas.include?(d)
     end
   end
@@ -85,6 +87,11 @@ cohorts.each do |cohort|
     cohort.endDate
   ).to_set
 
-  ap "Difference between expected registered for " + cohort.name
-  ap totalDates ^ @registeredDates
+  # ap "Difference between expected registered for " + cohort.name
+  # ap totalDates ^ @registeredDates
+  ap "EXPECTED: "
+  ap totalDates
+
+  ap "GOT: "
+  ap @registeredDates
 end
