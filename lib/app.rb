@@ -31,25 +31,25 @@ cohorts = [
               Date.new(2018,10,29),
               Date.new(2019,02,01)
   ),
-  # Cohort.new("CGI Remote September 2018",
-  #             Date.new(2018,10,01),
-  #             Date.new(2019,01,18)
-  # ),
-  # Cohort.new("Cognizant January 2019",
-  #             Date.new(2019,10,01), Date.today
-  # ),
-  # Cohort.new("Mixed September 2018",
-  #   Date.new(2018,10,01),
-  #   Date.new(2018,12,21)
-  # ),
-  # Cohort.new("November 2018",
-  #   Date.new(2019,01,07),
-  #   Date.today
-  # ),
-  # Cohort.new("RELX August 2018",
-  #   Date.new(2018,9,3),
-  #   Date.new(2018,11,8)
-  # ),
+  Cohort.new("CGI Remote September 2018",
+              Date.new(2018,10,01),
+              Date.new(2019,01,18)
+  ),
+  Cohort.new("Cognizant January 2019",
+              Date.new(2019,10,01), Date.today
+  ),
+  Cohort.new("Mixed September 2018",
+    Date.new(2018,10,01),
+    Date.new(2018,12,21)
+  ),
+  Cohort.new("November 2018",
+    Date.new(2019,01,07),
+    Date.today
+  ),
+  Cohort.new("RELX August 2018",
+    Date.new(2018,9,3),
+    Date.new(2018,11,8)
+  ),
 ]
 
 apiKey = ENV['AIRTABLE_API_KEY']
@@ -80,18 +80,15 @@ cohorts.each do |cohort|
 
   @registeredDates = registersByCohort[cohort.name].map { |r|
     Date.parse(r[:date])
-  }.to_set
+  }.sort { |d1, d2| d1 <=> d2 }.to_set
 
   totalDates = working_days_between(
     cohort.startDate,
     cohort.endDate
   ).to_set
 
-  # ap "Difference between expected registered for " + cohort.name
-  # ap totalDates ^ @registeredDates
-  ap "EXPECTED: "
-  ap totalDates
+# todo set logic
+  ap "Difference between expected registered for " + cohort.name
+  ap totalDates ^ @registeredDates
 
-  ap "GOT: "
-  ap @registeredDates
 end
