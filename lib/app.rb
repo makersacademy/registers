@@ -89,6 +89,7 @@ cohorts.each do |cohort|
 
 # todo set logic
   ap "Difference between expected registered for " + cohort.name
-  ap totalDates ^ @registeredDates
+  diff = totalDates ^ @registeredDates.sort { |d1, d2| d1 <=> d2 }.to_set
+  ap diff
 
 end
