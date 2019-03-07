@@ -3,93 +3,61 @@ require 'active_support/all'
 require 'awesome_print'
 require 'date'
 require 'business_time'
+require 'slack-ruby-client'
+require 'dotenv/load'
 
-class Cohort
-
-  def initialize(name, startDate, endDate)
-    @name = name
-    @startDate = startDate
-    @endDate = endDate
-  end
-
-  def name
-    @name
-  end
-
-  def startDate
-    @startDate
-  end
-
-  def endDate
-    @endDate
-  end
-
+Slack.configure do |config|
+  config.token = ENV["SLACK_API_TOKEN"]
 end
 
-cohorts = [
-  Cohort.new("Government October 2018",
-              Date.new(2018,10,29),
-              Date.new(2019,02,01)
-  ),
-  Cohort.new("CGI Remote September 2018",
-              Date.new(2018,10,01),
-              Date.new(2019,01,18)
-  ),
-  Cohort.new("Cognizant January 2019",
-              Date.new(2019,10,01), Date.today
-  ),
-  Cohort.new("Mixed September 2018",
-    Date.new(2018,10,01),
-    Date.new(2018,12,21)
-  ),
-  Cohort.new("November 2018",
-    Date.new(2019,01,07),
-    Date.today
-  ),
-  Cohort.new("RELX August 2018",
-    Date.new(2018,9,3),
-    Date.new(2018,11,8)
-  ),
-]
+@slackClient = Slack::Web::Client.new
+@slackClient.auth_test
+
+def postMessageToSlack(message)
+  @slackClient.chat_postMessage(channel: '#lindsey-test', text: message, as_user: true)
+end
 
 apiKey = ENV['AIRTABLE_API_KEY']
 apiBaseKey = ENV['AIRTABLE_BASE_KEY']
 
 @client = Airtable::Client.new(apiKey)
-@registersTable = @client.table(apiBaseKey, "Registers")
 
-@registersRecords = @registersTable.all
+@cohortsTable = @client.table(apiBaseKey, "Cohorts")
 
-registersByCohort = @registersRecords.group_by { |r|
-  r["Cohort"][0]
-}
+@cohortsRecords = @cohortsTable.all
+
+cohorts = @cohortsRecords.select do |cohort|
+    Date.parse(cohort[:end_date]).future?
+end
 
 cohorts.each do |cohort|
 
-  @xmas = (Date.new(2018,12,24)..Date.new(2019,01,04))
+  @registersTable = @client.table(apiBaseKey, "Registers")
+  @registersRecords = @registersTable.select(formula: "Cohort='#{cohort[:name]}'")
 
   def working_days_between(startDate, endDate)
     (startDate..endDate).select do |d|
       #weekday
       (1..5).include?(d.wday)
-    end.select do |d|
-      #xmas period
-      !@xmas.include?(d)
     end
   end
 
-  @registeredDates = registersByCohort[cohort.name].map { |r|
+  @registeredDates = @registersRecords.map { |r|
     Date.parse(r[:date])
   }.sort { |d1, d2| d1 <=> d2 }.to_set
 
   totalDates = working_days_between(
-    cohort.startDate,
-    cohort.endDate
+    Date.parse(cohort[:start_date]),
+    Date.today
   ).to_set
 
-# todo set logic
-  ap "Difference between expected registered for " + cohort.name
-  diff = totalDates ^ @registeredDates.sort { |d1, d2| d1 <=> d2 }.to_set
-  ap diff
+  diff = totalDates - @registeredDates.sort { |d1, d2| d1 <=> d2 }.to_set
+
+  if diff.empty?
+    postMessageToSlack("All registers up to date for #{cohort.name}. Great job, coach!")
+  else
+    postMessageToSlack("Missing registration days for #{cohort.name}")
+    postMessageToSlack(diff)
+  end
 
 end
