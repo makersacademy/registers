@@ -1,8 +1,9 @@
+load_paths = Dir["./vendor/bundle/ruby/2.6.0/gems/**/lib"]
+$LOAD_PATH.unshift(*load_paths)
+
 require 'airtable'
 require 'active_support/all'
 require 'awesome_print'
-require 'date'
-require 'business_time'
 require 'slack-ruby-client'
 require 'dotenv/load'
 
@@ -27,7 +28,11 @@ apiBaseKey = ENV['AIRTABLE_BASE_KEY']
 @cohortsRecords = @cohortsTable.all
 
 cohorts = @cohortsRecords.select do |cohort|
-    Date.parse(cohort[:end_date]).future?
+    begin
+      Date.parse(cohort[:end_date]).future?
+    rescue ArgumentError
+      false
+    end
 end
 
 cohorts.each do |cohort|
@@ -59,5 +64,4 @@ cohorts.each do |cohort|
     postMessageToSlack("Missing registration days for #{cohort.name}")
     postMessageToSlack(diff)
   end
-
 end
