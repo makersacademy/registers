@@ -6,9 +6,7 @@ class SlackBot
 
   def postMessageToSlack(message)
     @slackClient = Slack::Web::Client.new
-    puts "slack client?"
-    puts @slackClient
-    @slackClient.chat_postMessage(channel: '#lindsey-test', text: message, as_user: true)
+    @slackClient.chat_postMessage(channel: '#apprs-coaching', text: message, as_user: true)
     @slackClient
   end
 end
