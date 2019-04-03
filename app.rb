@@ -8,7 +8,7 @@ require 'slack-ruby-client'
 require 'dotenv/load'
 require './slack'
 
-def handler(event:, context:)
+# def handler(event:, context:)
 
   @slackBot = SlackBot.new
 
@@ -20,6 +20,8 @@ def handler(event:, context:)
   @cohortsTable = @client.table(apiBaseKey, "Cohorts")
 
   @cohortsRecords = @cohortsTable.all
+
+  ap @cohortsRecords
 
   cohorts = @cohortsRecords.select do |cohort|
       begin
@@ -59,4 +61,4 @@ def handler(event:, context:)
       @slackBot.postMessageToSlack(diff)
     end
   end
-end
+# end
